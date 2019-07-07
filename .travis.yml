@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t zalcyone/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true zalcyone/react-test npm test
+
+after_success:
+  - docker build -t zalcyone/multi-client ./client
+  - docker build -t zalcyone/multi-nginx ./nginx
+  - docker build -t zalcyone/multi-server ./server
+  - docker build -t zalcyone/multi-worker ./worker
+  # Log in to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push zalcyone/multi-client
+  - docker push zalcyone/multi-nginx
+  - docker push zalcyone/multi-server
+  - docker push zalcyone/multi-worker
